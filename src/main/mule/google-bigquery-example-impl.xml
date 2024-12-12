@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:bigquery="http://www.mulesoft.org/schema/mule/bigquery"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/bigquery http://www.mulesoft.org/schema/mule/bigquery/current/mule-bigquery.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="google-bigquery-example-impl-flow" doc:id="8ae9b431-f532-46ce-afb6-9ecc7c004c29" >
+		<logger level="TRACE" doc:name="Trace - Flow Starting" doc:id="1ca64cb7-08e4-4a1a-aac4-b3ee49fc34c6" message="Flow starting"/>
+		<logger level="TRACE" doc:name="Trace - Getting Contact Data" doc:id="3e6e846c-6e6d-48dd-bed2-8bd9007ab63b" message="Getting contact data from database"/>
+		<db:select doc:name="ALL Contacts" doc:id="7ad77edc-757c-4205-b77e-6a1de5a59272" config-ref="Postgres_Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM public.contacts]]></db:sql>
+		</db:select>
+		<logger level="TRACE" doc:name="Trace - Processing Contact Data" doc:id="2f394022-7c2d-42b7-86ce-cdece252c0c0" message="Starting loop to process contact data" />
+		<foreach doc:name="For Each Batch" doc:id="f9635bcd-3562-467b-a1d1-2fa45bb02128" collection="#[payload]" batchSize="5000">
+			<logger level="TRACE" doc:name="Trace - Inserting Contact Data" doc:id="3a49032b-888e-4532-9c59-5fcd25fafda2" message="Inserting contact data to Google BigQuery" />
+			<bigquery:insert-all doc:name="Contacts" doc:id="44b1eb3c-02ae-4cfd-bc39-c9198e7b6767" config-ref="Google_BigQuery_Config" datasetId="${bigquery.dataset}" tableId="${bigquery.table}" rowsData="#[payload]" />
+		</foreach>
+		<logger level="TRACE" doc:name="Trace - Insert Successful" doc:id="e18fd114-53ff-46a7-8663-5804443f3579" message="Contact data was inserted into Google BigQuery successfully"/>
+		<ee:transform doc:name="Create API Response" doc:id="d017901e-396d-4385-a77e-657441283cf2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	dateTime: now(),
+	httpStatus: 201,
+	summaryMessage: "Contact data was inserted into Google BigQuery successfully"
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<logger level="TRACE" doc:name="Trace - Flow Ending" doc:id="496910d0-f6ee-47b9-acec-9099d9a3f1ad" message="Flow ending" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5f4b8964-5d77-47f7-88b2-3b933b6d6735" >
+				<logger level="ERROR" doc:name="Error - Log Error Payload" doc:id="d4eaca2d-3778-4a71-a13b-ff2ab934fff9" message="#[output application/json --- error.errorMessage.payload]" />
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

@@ -1,0 +1,41 @@
+#===================================================================================================
+# Mule Application Properties Template
+#===================================================================================================
+# In the Mule global.xml configuration file, notice the following two global configuration elements.
+# - First, the global property named env, which specifies the current environment - e.g., local.
+# - Second, the configuration properties, which follows the naming convention of mule-props-<environment>
+#   to support environment-specific files.
+#   
+# As such, copy this template to a file named mule-props-local.yaml and update the placeholders to 
+# match your environment and resources.
+env:
+  name: "local"
+
+#---------------------------------------------------------------------------------------------------
+# HTTP Listener on CloudHub
+http_listener:  # Comnmon to HTTP and HTTPS
+  host: "0.0.0.0"
+
+http:
+  port: "8081"
+https:
+  port: "8082"
+
+#---------------------------------------------------------------------------------------------------
+# Database Connector
+postgres_db:
+  host:           ""    # Specify your database host
+  port:           ""    # Specify the database port
+  url:            "jdbc:postgresql://${postgres_db.host}:${postgres_db.port}/${postgres_db.db_name}"
+  driver_class:   "org.postgresql.Driver"
+  username:       ""    # Specify your database user
+  password:       ""    # Specify your database password
+  db_name:        ""    # Specify the name of your database - e.g., postgres
+
+#---------------------------------------------------------------------------------------------------
+# Google BigQuery Connector
+bigquery:
+  key_file:   "key-file/Google-Identity-Service-Account.keys.json"    # Update as needed
+  project_id: ""    # Specify the name of your Google Cloud project
+  dataset:    ""    # Specify the name of your Google BigQuery dataset
+  table:      ""    # Specify the name of your Google BigQuery table

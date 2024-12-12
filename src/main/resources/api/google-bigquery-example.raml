@@ -1,0 +1,12 @@
+#%RAML 1.0
+title: Google BigQuery Example
+mediaType:
+  - application/json
+
+/contacts:
+  post:
+    displayName: Creates contacts in Batch
+    body:
+      type: any
+    responses:
+      "201": {}

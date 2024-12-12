@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:bigquery="http://www.mulesoft.org/schema/mule/bigquery" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/bigquery http://www.mulesoft.org/schema/mule/bigquery/current/mule-bigquery.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<global-property doc:name="Global Property" doc:id="19017cf3-ae28-4322-9222-b8f7813bf8f0" name="env" value="local" />
+	<configuration-properties doc:name="Configuration properties" doc:id="634eca5c-3f6c-48fe-90a4-33a5f1faf51a" file="properties/mule-props-${env}.yaml" />
+    <http:listener-config name="google-bigquery-example-httpListenerConfig">
+		<http:listener-connection host="${http_listener.host}" port="${http.port}"/>
+    </http:listener-config>
+	<db:config name="Postgres_Database_Config" doc:name="Database Config" doc:id="66da3f48-7ef8-4e87-b4e2-c0762d2f5841" >
+		<db:generic-connection url="${postgres_db.url}" driverClassName="${postgres_db.driver_class}" user="${postgres_db.username}" password="${postgres_db.password}" />
+	</db:config>
+	<bigquery:config name="Google_BigQuery_Config" doc:name="Google_bigquery Config" doc:id="9ea364a4-9725-4d53-bd20-bde4c19969e5" >
+		<bigquery:connection projectId="${bigquery.project_id}" jsonServiceAccountKeyFile="${bigquery.key_file}"/>
+	</bigquery:config>
+</mule>

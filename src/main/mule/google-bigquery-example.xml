@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <apikit:config name="google-bigquery-example-config" api="google-bigquery-example.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="google-bigquery-example-main">
+        <http:listener config-ref="google-bigquery-example-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="google-bigquery-example-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST" enableNotifications="true" logException="true">
+                <ee:transform doc:name="Create HTTP 400 Response" doc:id="fc916f4e-246d-4cd0-8c40-ab30606be189">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	dateTime: now(),
+	httpStatus: 400,
+	summaryMessage: error.description,
+	errorType: error.errorType.identifier
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Create HTTP 404 Response" doc:id="cd72b6a0-b0aa-40ec-8339-17c7fad4a087">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  dateTime: now(),
+  httpStatus: 404,
+  summaryMessage: "There is no resource that match the provided URL",
+  errorType: error.errorType.identifier
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Create HTTP 405 Response" doc:id="be128d6a-572c-41bd-8f1e-7515f80f1caa">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  dateTime: now(),
+  httpStatus: 405,
+  summaryMessage: "The requested HTTP method is not allowed on this resource",
+  errorType: error.errorType.identifier
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Create HTTP 406 Response" doc:id="441190f5-88c3-4dfd-ab5d-ddb25247a0f3">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  dateTime: now(),
+  httpStatus: 406,
+  summaryMessage: "Not acceptable error",
+  errorType: error.errorType.identifier
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Create HTTP 415 Response" doc:id="0dbfafa1-b555-45fb-9d21-cf1e33c22719">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  dateTime: now(),
+  httpStatus: 415,
+  summaryMessage: "The media type is not supported by this resource",
+  errorType: error.errorType.identifier
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Create HTTP 501 Response" doc:id="15271064-3710-4407-bedf-5370f74b537a">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  dateTime: now(),
+  httpStatus: 501,
+  summaryMessage: "Not implemented error",
+  errorType: error.errorType.identifier
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="ANY">
+                <ee:transform doc:name="Create HTTP 500 Response" doc:id="42e30e7b-dd85-40f5-b214-d2252a51712c">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  dateTime: now(),
+  httpStatus: 500,
+  summaryMessage: "Internal server error",
+  errorType: error.errorType.identifier
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[500]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="google-bigquery-example-console">
+        <http:listener config-ref="google-bigquery-example-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="google-bigquery-example-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Create HTTP 404 Response" doc:id="32d2809c-d39b-4d49-8d9b-408236f03299">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  dateTime: now(),
+  httpStatus: 404,
+  summaryMessage: "There is no resource that match the provided URL",
+  errorType: error.errorType.identifier
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="post:\contacts:application\json:google-bigquery-example-config">
+		<flow-ref doc:name="google-bigquery-example-impl-flow" doc:id="9f1c9449-88c8-4b7d-b2b0-14d6965231cb" name="google-bigquery-example-impl-flow"/>
+    </flow>
+</mule>
